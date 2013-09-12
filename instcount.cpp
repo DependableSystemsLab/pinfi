@@ -1,5 +1,12 @@
 #include<iostream>
 #include<fstream>
+
+#include <set>
+#include <map>
+#include <string>
+
+#include <regex>
+
 #include "pin.H"
 
 //#include "faultinjection.h"
@@ -22,6 +29,12 @@ VOID countAllInst() {fi_all++;}
 VOID countCCSInst() {fi_ccs++;}
 VOID countSPInst() {fi_sp++;}
 VOID countBPInst() { fi_bp++;}
+
+
+// TODO: delete later
+static std::map<string, std::set<string>* > category_opcode_map;
+
+
 // Pin calls this function every time a new instruction is encountered
 VOID CountInst(INS ins, VOID *v)
 {
@@ -115,7 +128,12 @@ VOID CountInst(INS ins, VOID *v)
 #endif
 
 
-
+// TODO: only for collecting data
+  string cate = CATEGORY_StringShort(INS_Category(ins));
+  if (category_opcode_map.find(cate) == category_opcode_map.end()) {
+    category_opcode_map.insert(std::pair<string, std::set<string>* >(cate, new std::set<string>));  
+  }
+  category_opcode_map[cate]->insert(INS_Mnemonic(ins));
 
 	INS_InsertPredicatedCall(
 				ins, IPOINT_AFTER, (AFUNPTR)countAllInst,
@@ -161,6 +179,19 @@ VOID Fini(INT32 code, VOID *v)
 	OutFile <<"CCSavedInst:"<< fi_ccs  << endl;
 	OutFile << "SPInst:"<< fi_sp << endl;
     OutFile << "FPInst:"<< fi_bp << endl;
+    
+
+// TODO: remove the below later. only for collecting category strings
+  OutFile << endl;
+  for (std::map<string, std::set<string>* >::iterator it = category_opcode_map.begin();
+      it != category_opcode_map.end(); ++it) {
+    OutFile << it->first << std::endl;  
+    for (std::set<string>::iterator it2 = it->second->begin();
+         it2 != it->second->end(); ++it2) {
+      OutFile << "\t" << *it2 << endl;  
+    }
+  }
+
 	OutFile.close();
 }
 
