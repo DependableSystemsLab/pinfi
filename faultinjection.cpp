@@ -4,6 +4,8 @@
 #include "pin.H"
 #include "fi_cjmp_map.h"
 
+#include "utils.h"
+#include "instselector.h"
 
 //#define INCLUDEALLINST
 #define NOBRANCHES //always set
@@ -196,32 +198,8 @@ VOID inject_CCS(VOID *ip, UINT32 reg_num, CONTEXT *ctxt){
 
 VOID instruction_Instrumentation(INS ins, VOID *v){
 	// decides where to insert the injection calls and what calls to inject
-
-/**
- * IMPORTANT: This is to make sure fault injections are done at the .text 
- * of the compiled code, instead of at libraries or .init/.fini sections
- */
-  if (!RTN_Valid(INS_Rtn(ins))) { // some library instructions do not have rtn !?
-    //LOG("Invalid RTN " + INS_Disassemble(ins) + "\n");
+  if (!isValidInst(ins))
     return;
-  }
-  if (!IMG_IsMainExecutable(SEC_Img(RTN_Sec(INS_Rtn(ins))))) {
-    //LOG("Libraries " + IMG_Name(SEC_Img(RTN_Sec(INS_Rtn(ins)))) + "\n");
-    return;
-  }
-  if (SEC_Name(RTN_Sec(INS_Rtn(ins))) != ".text") {
-    //LOG("Section: " + SEC_Name(RTN_Sec(INS_Rtn(ins))) + "\n");
-    return;
-  }
-  std::string rtnname = RTN_Name(INS_Rtn(ins));
-  if (rtnname.find("__libc") == 0 || rtnname.find("_start") == 0 ||
-      rtnname.find("call_gmon_start") == 0 || rtnname.find("frame_dummy") == 0 ||
-      rtnname.find("__do_global") == 0 || rtnname.find("__stat") == 0) {
-    return;
-  }
-
-
-
 	
 	int numW = INS_MaxNumWRegs(ins), randW = 0;
 	UINT32 index = 0;
@@ -313,6 +291,12 @@ VOID instruction_Instrumentation(INS ins, VOID *v){
     }
 #endif
       
+
+
+// select instruction based on instruction type
+  if(!isInstFITarget(ins))
+    return;
+
 
   if(numW > 1 && (reg == REG_RFLAGS || reg == REG_FLAGS || reg == REG_EFLAGS))
            randW = (randW + 1) % numW; 
@@ -483,6 +467,11 @@ int main(int argc, char *argv[])
 	PIN_InitSymbols();
 
     if (PIN_Init(argc, argv)) return Usage();
+  
+
+
+  configInstSelector();
+
 
 	get_instance_number(instcount_file.Value().c_str());
 

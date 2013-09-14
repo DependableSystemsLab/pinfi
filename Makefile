@@ -1,7 +1,7 @@
 ##
 ## PIN tools
 ##
-PIN_HOME ?= /data/pin
+PIN_HOME ?= /ubc/ece/home/kp/grads/jwei/pin
 OBJDIR = testobj
 ##############################################################
 #
@@ -55,10 +55,10 @@ $(OBJDIR):
 
 
 
-$(OBJDIR)faultinjection.o: faultinjection.cpp faultinjection.h
+$(OBJDIR)faultinjection.o: faultinjection.cpp utils.cpp instselector.cpp
 	$(CXX) -c $(CXXFLAGS) $(PIN_CXXFLAGS) ${OUTOPT} $@ $<
 
-$(OBJDIR)instcount.o: instcount.cpp 
+$(OBJDIR)instcount.o: instcount.cpp utils.cpp instselector.cpp
 	$(CXX) -c $(CXXFLAGS) $(PIN_CXXFLAGS) $(OUTOPT) $@ $<
 
 # $(UTIL_OBJ) : fi_util.cpp fi_util.h
