@@ -27,7 +27,6 @@ bool isValidInst(INS ins) {
   }
   LOG("Exe " + RTN_Name(INS_Rtn(ins)) + "\n");
 
-    // Insert a call to docount before every instruction, no arguments are passed
 	REG reg = INS_RegW(ins, 0);
 	if(!REG_valid(reg))
 		return false;

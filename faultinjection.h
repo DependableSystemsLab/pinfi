@@ -6,7 +6,7 @@
 #include "stdlib.h"
 
 KNOB<string> instcount_file(KNOB_MODE_WRITEONCE, "pintool",
-    "o", "instcount", "specify instruction count file name");
+    "o", "pin.instcount.txt", "specify instruction count file name");
 
 KNOB<string> fioption(KNOB_MODE_WRITEONCE, "pintool", "fioption", "", "specify fault injection option: all, sp, fp, ccs");
 

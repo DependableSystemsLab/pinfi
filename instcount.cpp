@@ -18,7 +18,7 @@
 //#define ONLYFP
 
 KNOB<string> instcount_file(KNOB_MODE_WRITEONCE, "pintool",
-    "o", "instcount", "specify instruction count file name");
+    "o", "pin.instcount.txt", "specify instruction count file name");
 	
 static UINT64 fi_all = 0;
 static UINT64 fi_ccs = 0;
@@ -31,17 +31,12 @@ VOID countSPInst() {fi_sp++;}
 VOID countBPInst() { fi_bp++;}
 
 
-// TODO: delete later
-static std::map<string, std::set<string>* > category_opcode_map;
-
-
 // Pin calls this function every time a new instruction is encountered
 VOID CountInst(INS ins, VOID *v)
 {
   if (!isValidInst(ins))
     return;
 
-    //INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)countAllInst, IARG_END);
 #ifdef INCLUDEALLINST
  	int numW = INS_MaxNumWRegs(ins), mayChangeControlFlow = 0;
    if(!INS_HasFallThrough(ins))
@@ -98,23 +93,10 @@ VOID CountInst(INS ins, VOID *v)
   }
 #endif
 
-
-// TODO: only for collecting data
-  string cate = CATEGORY_StringShort(INS_Category(ins));
-  if (category_opcode_map.find(cate) == category_opcode_map.end()) {
-    category_opcode_map.insert(std::pair<string, std::set<string>* >(cate, new std::set<string>));  
-  }
-  category_opcode_map[cate]->insert(INS_Mnemonic(ins));
-
-
-
-
   
 // select instruction based on instruction type
   if(!isInstFITarget(ins))
     return;
-
-
 
 
 	INS_InsertPredicatedCall(
@@ -122,20 +104,6 @@ VOID CountInst(INS ins, VOID *v)
 				IARG_END);	
 #endif
 
-#if 0
-	if (INS_Category(ins) == XED_CATEGORY_POP)
-		INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)countCCSInst, IARG_END);
-	
-	for(int i=0; i<numW; i++){
-		const REG reg =  INS_RegW(ins, i );
-		if(reg == REG_RSP || reg == REG_ESP || reg == REG_SP)
-		{	INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)countSPInst, IARG_END);
-// 			LOG("ins SP:" + INS_Disassemble(ins) + "\n"); 
-		}
-		if(reg == REG_RBP || reg == REG_EBP || reg == REG_BP)
-			INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)countBPInst, IARG_END);
-	}
-#endif
 
 }
 
@@ -162,18 +130,6 @@ VOID Fini(INT32 code, VOID *v)
 	OutFile << "SPInst:"<< fi_sp << endl;
     OutFile << "FPInst:"<< fi_bp << endl;
     
-
-// TODO: remove the below later. only for collecting category strings
-  OutFile << endl;
-  for (std::map<string, std::set<string>* >::iterator it = category_opcode_map.begin();
-      it != category_opcode_map.end(); ++it) {
-    OutFile << it->first << std::endl;  
-    for (std::set<string>::iterator it2 = it->second->begin();
-         it2 != it->second->end(); ++it2) {
-      OutFile << "\t" << *it2 << endl;  
-    }
-  }
-
 	OutFile.close();
 }
 

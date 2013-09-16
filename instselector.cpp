@@ -7,7 +7,7 @@ static const string ALL = "all";
 static const string LOAD = "load";
 static const string STORE = "store";
 
-static string configfile = "pin.instselector.config.txt"
+static string configfile = "pin.config.instselector.txt"
 
 
 bool _isLoadInst(INS ins) {
@@ -36,7 +36,6 @@ void configInstSelector() {
   if (!ifs.bad()) {
     unsigned line_num = 0;
 
-    // first line include
     while (!ifs.eof()) {
       char line[1000];
       ifs.getline(line, 1000);
@@ -47,8 +46,9 @@ void configInstSelector() {
       string line_str(line);
       string inst_arr[100];
       UINT32 ret = Tokenize(line_str, line_arr, 100);
-      std::err << "ret of Tokenize " << ret << endl;
+      cerr << "ret of Tokenize " << ret << endl;
 
+      // first line include
       if (line_num == 0) {
         for (int i = 0; i < 100; i++) {
           if (line_arr[i] != "") {

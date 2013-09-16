@@ -26,29 +26,6 @@ VOID CountInst(INS ins, VOID *v)
 
     //INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)countAllInst, IARG_END);
 #ifdef INCLUDEALLINST
- 	int numW = INS_MaxNumWRegs(ins), mayChangeControlFlow = 0;
-   if(!INS_HasFallThrough(ins))
-		mayChangeControlFlow = 1;
-	for(int i =0; i < numW; i++){
-		reg = INS_RegW(ins, i);
-		if(reg == REG_RIP || reg == REG_EIP || reg == REG_IP) // conditional branches
-		{	mayChangeControlFlow = 1; break;}
-	}
-
-	if(mayChangeControlFlow) {
-		INS_InsertPredicatedCall(
-				ins, IPOINT_BEFORE, (AFUNPTR)countAllInst,
-				IARG_END);	
-		//LOG("No through\n");
-	}
-	else{
-		INS_InsertPredicatedCall(
-				ins, IPOINT_AFTER, (AFUNPTR)countAllInst,
-				IARG_END);	
-// 		LOG("ins SP:" + INS_Disassemble(ins) + "\n"); 
-// 		LOG("reg:" + REG_StringShort(reg) +"\n");
-		//LOG(numW+"\n"); 
-	}
 #else
 
 #ifdef NOBRANCHES
@@ -70,7 +47,7 @@ VOID CountInst(INS ins, VOID *v)
 #ifdef ONLYFP
  	int numW = INS_MaxNumWRegs(ins);
   bool hasfp = false;
-  for (int i = 0; i < numW; i++){
+  for (int i = 0; i < numW; i++) {
     if (reg_map.isFloatReg(reg)) {
       hasfp = true;
       break;
@@ -81,16 +58,13 @@ VOID CountInst(INS ins, VOID *v)
   }
 #endif
 
+#endif
 
-// TODO: only for collecting data
   string cate = CATEGORY_StringShort(INS_Category(ins));
   if (category_opcode_map.find(cate) == category_opcode_map.end()) {
     category_opcode_map.insert(std::pair<string, std::set<string>* >(cate, new std::set<string>));  
   }
   category_opcode_map[cate]->insert(INS_Mnemonic(ins));
-
-#endif
-
 }
 
 // This function is called when the application exits
@@ -117,13 +91,11 @@ VOID Fini(INT32 code, VOID *v)
 /* Print Help Message                                                    */
 /* ===================================================================== */
 
-INT32 Usage()
-{
-    cerr << "This tool collects the instruction categories/opcode exist in the program" << endl;
+INT32 Usage() {
+    cerr << "This tool collects the instruction categories/opcode in the program" << endl;
     cerr << endl << KNOB_BASE::StringKnobSummary() << endl;
     return -1;
 }
-
 
 
 int main(int argc, char * argv[])

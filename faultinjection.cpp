@@ -36,10 +36,7 @@ VOID FI_InjectFault_FlagReg(VOID * ip, UINT32 reg_num, UINT32 jmp_num, CONTEXT* 
 				temp = temp ^ (1U << inject_bit);
 
 				PIN_SetContextReg( ctxt, reg, temp);
-					
-				
-			}
-			else if (jmptype == CJmpMap::USPECJMP) {
+	    } else if (jmptype == CJmpMap::USPECJMP) {
 				UINT32 temp = PIN_GetContextReg( ctxt, reg );
 				UINT32 CF_val = (temp & (1U << CF_BIT)) >> CF_BIT;
 				UINT32 ZF_val = (temp & (1U << ZF_BIT)) >> ZF_BIT;
@@ -51,8 +48,7 @@ VOID FI_InjectFault_FlagReg(VOID * ip, UINT32 reg_num, UINT32 jmp_num, CONTEXT* 
 					temp = temp | (1U << ZF_BIT);
 				}
 				PIN_SetContextReg( ctxt, reg, temp);
-			}
-			else {
+	    }	else {
 				UINT32 temp = PIN_GetContextReg( ctxt, reg );
 				UINT32 SF_val = (temp & (1U << SF_BIT)) >> SF_BIT;
 				UINT32 OF_val = (temp & (1U << OF_BIT)) >> OF_BIT;
@@ -82,13 +78,6 @@ VOID FI_InjectFault_FlagReg(VOID * ip, UINT32 reg_num, UINT32 jmp_num, CONTEXT* 
 	} 
 	fi_iterator ++;
 }
-
-
-
-
-
-
-
 
 
 
@@ -204,11 +193,7 @@ VOID instruction_Instrumentation(INS ins, VOID *v){
 	int numW = INS_MaxNumWRegs(ins), randW = 0;
 	UINT32 index = 0;
 	REG reg;
-	if(fioption.Value() == ALL_INST){
-		srand((unsigned)time(0));
-        reg = INS_RegW(ins, randW);
-        if(!REG_valid(reg))
-            return;
+  
 #ifdef INCLUDEALLINST	
   int mayChangeControlFlow = 0;
         if(!INS_HasFallThrough(ins))
@@ -232,6 +217,10 @@ VOID instruction_Instrumentation(INS ins, VOID *v){
         LOG("ins:" + INS_Disassemble(ins) + "\n"); 
 		LOG("reg:" + REG_StringShort(reg) + "\n");
 		
+    // FIXME: INCLUDEINST is not used now. However, if you enable this option
+    // in the future, you need to change the code below. If it changes the 
+    // control flow, you need to inject fault in the read register rather than
+    // write register
         if(mayChangeControlFlow)
 			INS_InsertPredicatedCall(
 					ins, IPOINT_BEFORE, (AFUNPTR)inject_CCS,
@@ -277,6 +266,15 @@ VOID instruction_Instrumentation(INS ins, VOID *v){
     return;  
   }
 #endif
+
+
+// select instruction based on instruction type
+  if(!isInstFITarget(ins))
+    return;
+
+
+
+
       if(numW > 1)
 			  randW = random() % numW;
       else
@@ -290,13 +288,6 @@ VOID instruction_Instrumentation(INS ins, VOID *v){
       reg = INS_RegW(ins, randW);
     }
 #endif
-      
-
-
-// select instruction based on instruction type
-  if(!isInstFITarget(ins))
-    return;
-
 
   if(numW > 1 && (reg == REG_RFLAGS || reg == REG_FLAGS || reg == REG_EFLAGS))
            randW = (randW + 1) % numW; 
@@ -338,53 +329,6 @@ VOID instruction_Instrumentation(INS ins, VOID *v){
 					IARG_END);		
 #endif        
 
-	}
-	else if(fioption.Value() == CCS_INST && INS_Category(ins) == XED_CATEGORY_POP){
-		//check numW and get the written reg instd of SP
-		REG reg;
-		if(numW == 1 || numW == 2){	//popped SP
-			reg = INS_RegW(ins, 0);
-			if(numW == 1 || !is_stackptrReg(reg)) index = reg_map.findRegIndex(reg);
-			else{
-				reg = INS_RegW(ins, 1);
-				index = reg_map.findRegIndex(reg);
-			}
-		}
-		else{ //doesn't reach here
-			fprintf(stderr, "ERROR, POP instructions can have max of 2 regis\n");
-			exit(1);
-		}
-		INS_InsertPredicatedCall(
-							ins, IPOINT_AFTER, (AFUNPTR)inject_CCS,
-							IARG_ADDRINT, INS_Address(ins),
-							IARG_UINT32, index,	
-							IARG_CONTEXT,
-							IARG_END);
-	}
-	else{
-		for(int i=0; i<numW; i++){
-			const REG reg =  INS_RegW(ins, i );
-			if( (fioption.Value() == SP_INST && is_stackptrReg(reg))
-				|| (fioption.Value() == FP_INST && is_frameptrReg(reg)) ){
-				index = reg_map.findRegIndex(reg);
-				//check if it's a unconditional branch/ CALL -- IPOINT_BEFORE
-				if(!INS_HasFallThrough(ins))
-					INS_InsertPredicatedCall(
-							ins, IPOINT_BEFORE, (AFUNPTR)inject_SP_FP,
-							IARG_ADDRINT, INS_Address(ins),
-							IARG_UINT32, index,	
-							IARG_CONTEXT,
-							IARG_END);		
-				else
-					INS_InsertPredicatedCall(
-							ins, IPOINT_AFTER, (AFUNPTR)inject_SP_FP,
-							IARG_ADDRINT, INS_Address(ins),
-							IARG_UINT32, index,	
-							IARG_CONTEXT,
-							IARG_END);					
-			}
-		}
-	}	
 }
 
 VOID get_instance_number(const char* fi_instcount_file)
