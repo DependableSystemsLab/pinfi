@@ -37,14 +37,14 @@ endif
 
 
  
-TOOL_ROOTS = instcount faultinjection
+TOOL_ROOTS = instcount faultinjection instcategory
 
 
 TOOLS = $(TOOL_ROOTS:%=$(OBJDIR)%$(PINTOOL_SUFFIX))
 
 all: tools
 tools: $(OBJDIR) $(TOOLS)
-test: $(OBJDIR) faultinjection.test instcount.test
+test: $(OBJDIR) faultinjection.test instcount.test instcategory.test
 
 UTIL_OBJ =$(OBJDIR)fi_util.o
 
@@ -59,6 +59,9 @@ $(OBJDIR)faultinjection.o: faultinjection.cpp utils.cpp instselector.cpp
 	$(CXX) -c $(CXXFLAGS) $(PIN_CXXFLAGS) ${OUTOPT} $@ $<
 
 $(OBJDIR)instcount.o: instcount.cpp utils.cpp instselector.cpp
+	$(CXX) -c $(CXXFLAGS) $(PIN_CXXFLAGS) $(OUTOPT) $@ $<
+
+$(OBJDIR)instcategory.o: instcategory.cpp utils.cpp
 	$(CXX) -c $(CXXFLAGS) $(PIN_CXXFLAGS) $(OUTOPT) $@ $<
 
 # $(UTIL_OBJ) : fi_util.cpp fi_util.h

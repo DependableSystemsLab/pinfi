@@ -7,33 +7,16 @@
 
 #include "pin.H"
 #include "utils.h"
-#include "instselector.h"
-
-//#include "faultinjection.h"
-//#include "commonvars.h"
 
 //#define INCLUDEALLINST
 #define NOBRANCHES
 //#define NOSTACKFRAMEOP
 //#define ONLYFP
 
-KNOB<string> instcount_file(KNOB_MODE_WRITEONCE, "pintool",
-    "o", "instcount", "specify instruction count file name");
-	
-static UINT64 fi_all = 0;
-static UINT64 fi_ccs = 0;
-static UINT64 fi_sp = 0;
-static UINT64 fi_bp = 0;
+KNOB<string> instcategory_file(KNOB_MODE_WRITEONCE, "pintool",
+    "o", "pin.instcategory.txt", "output file to store instruction categories");
 
-VOID countAllInst() {fi_all++;}
-VOID countCCSInst() {fi_ccs++;}
-VOID countSPInst() {fi_sp++;}
-VOID countBPInst() { fi_bp++;}
-
-
-// TODO: delete later
 static std::map<string, std::set<string>* > category_opcode_map;
-
 
 // Pin calls this function every time a new instruction is encountered
 VOID CountInst(INS ins, VOID *v)
@@ -106,66 +89,19 @@ VOID CountInst(INS ins, VOID *v)
   }
   category_opcode_map[cate]->insert(INS_Mnemonic(ins));
 
-
-
-
-  
-// select instruction based on instruction type
-  if(!isInstFITarget(ins))
-    return;
-
-
-
-
-	INS_InsertPredicatedCall(
-				ins, IPOINT_AFTER, (AFUNPTR)countAllInst,
-				IARG_END);	
-#endif
-
-#if 0
-	if (INS_Category(ins) == XED_CATEGORY_POP)
-		INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)countCCSInst, IARG_END);
-	
-	for(int i=0; i<numW; i++){
-		const REG reg =  INS_RegW(ins, i );
-		if(reg == REG_RSP || reg == REG_ESP || reg == REG_SP)
-		{	INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)countSPInst, IARG_END);
-// 			LOG("ins SP:" + INS_Disassemble(ins) + "\n"); 
-		}
-		if(reg == REG_RBP || reg == REG_EBP || reg == REG_BP)
-			INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)countBPInst, IARG_END);
-	}
 #endif
 
 }
 
-// bool mayChangeControlFlow(INS ins){
-// 	REG reg;
-// 	if(!INS_HasFallThrough(ins))
-// 		return true;
-// 	int numW = INS_MaxNumWRegs(ins);
-// 	for(int i =0; i < numW; i++){
-// 		if(reg == REG_RIP || reg == REG_EIP || reg == REG_IP) // conditional branches
-// 			return true;
-// 	}
-// 	return false;
-// }
 // This function is called when the application exits
 VOID Fini(INT32 code, VOID *v)
 {
     // Write to a file since cout and cerr maybe closed by the application
     ofstream OutFile;
-    OutFile.open(instcount_file.Value().c_str());
+    OutFile.open(instcategory_file.Value().c_str());
     OutFile.setf(ios::showbase);
-    OutFile <<"AllInst:"<< fi_all << endl;
-	OutFile <<"CCSavedInst:"<< fi_ccs  << endl;
-	OutFile << "SPInst:"<< fi_sp << endl;
-    OutFile << "FPInst:"<< fi_bp << endl;
     
-
-// TODO: remove the below later. only for collecting category strings
-  OutFile << endl;
-  for (std::map<string, std::set<string>* >::iterator it = category_opcode_map.begin();
+    for (std::map<string, std::set<string>* >::iterator it = category_opcode_map.begin();
       it != category_opcode_map.end(); ++it) {
     OutFile << it->first << std::endl;  
     for (std::set<string>::iterator it2 = it->second->begin();
@@ -183,7 +119,7 @@ VOID Fini(INT32 code, VOID *v)
 
 INT32 Usage()
 {
-    cerr << "This tool counts the number of dynamic instructions executed" << endl;
+    cerr << "This tool collects the instruction categories/opcode exist in the program" << endl;
     cerr << endl << KNOB_BASE::StringKnobSummary() << endl;
     return -1;
 }
@@ -196,12 +132,6 @@ int main(int argc, char * argv[])
 	// Initialize pin
     if (PIN_Init(argc, argv)) return Usage();
 
-  
-  
-    configInstSelector();
-
-
-
     // Register Instruction to be called to instrument instructions
     INS_AddInstrumentFunction(CountInst, 0);
 
@@ -209,7 +139,7 @@ int main(int argc, char * argv[])
     PIN_AddFiniFunction(Fini, 0);
     
     // Start the program, never returns
-    PIN_StartProgram();
+    // PIN_StartProgram();
     
     return 0;
 }
