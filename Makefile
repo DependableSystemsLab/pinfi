@@ -46,7 +46,6 @@ all: tools
 tools: $(OBJDIR) $(TOOLS)
 test: $(OBJDIR) faultinjection.test instcount.test instcategory.test
 
-UTIL_OBJ =$(OBJDIR)fi_util.o
 
 ## build rules
 
@@ -55,13 +54,19 @@ $(OBJDIR):
 
 
 
-$(OBJDIR)faultinjection.o: faultinjection.cpp utils.cpp instselector.cpp
+$(OBJDIR)faultinjection.o: faultinjection.cpp
 	$(CXX) -c $(CXXFLAGS) $(PIN_CXXFLAGS) ${OUTOPT} $@ $<
 
-$(OBJDIR)instcount.o: instcount.cpp utils.cpp instselector.cpp
+$(OBJDIR)instcount.o: instcount.cpp
 	$(CXX) -c $(CXXFLAGS) $(PIN_CXXFLAGS) $(OUTOPT) $@ $<
 
-$(OBJDIR)instcategory.o: instcategory.cpp utils.cpp
+$(OBJDIR)instcategory.o: instcategory.cpp
+	$(CXX) -c $(CXXFLAGS) $(PIN_CXXFLAGS) $(OUTOPT) $@ $<
+
+$(OBJDIR)instselector.o: instselector.cpp
+	$(CXX) -c $(CXXFLAGS) $(PIN_CXXFLAGS) $(OUTOPT) $@ $<
+
+$(OBJDIR)utils.o: utils.cpp
 	$(CXX) -c $(CXXFLAGS) $(PIN_CXXFLAGS) $(OUTOPT) $@ $<
 
 # $(UTIL_OBJ) : fi_util.cpp fi_util.h
@@ -69,8 +74,8 @@ $(OBJDIR)instcategory.o: instcategory.cpp utils.cpp
 	
 
 $(TOOLS): $(PIN_LIBNAMES)
-$(TOOLS): %$(PINTOOL_SUFFIX) : %.o 
-	$(PIN_LD) $(PIN_LDFLAGS) ${LINK_OUT}$@ $< $(PIN_LIBS) $(DBG)
+$(TOOLS): %$(PINTOOL_SUFFIX) : %.o $(OBJDIR)instselector.o $(OBJDIR)utils.o
+	$(PIN_LD) $(PIN_LDFLAGS) ${LINK_OUT}$@ $< $(OBJDIR)instselector.o $(OBJDIR)utils.o $(PIN_LIBS) $(DBG)
 
 ## cleaning
 clean:

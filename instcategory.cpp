@@ -111,7 +111,7 @@ int main(int argc, char * argv[])
     PIN_AddFiniFunction(Fini, 0);
     
     // Start the program, never returns
-    // PIN_StartProgram();
+    PIN_StartProgram();
     
     return 0;
 }

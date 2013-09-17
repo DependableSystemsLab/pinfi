@@ -1,4 +1,10 @@
+#include <iostream>
+#include <set>
+#include <fstream>
+
 #include "pin.H"
+
+using namespace std;
 
 static std::set<string> includeinst;
 static std::set<string> excludeinst;
@@ -7,7 +13,7 @@ static const string ALL = "all";
 static const string LOAD = "load";
 static const string STORE = "store";
 
-static string configfile = "pin.config.instselector.txt"
+static string configfile = "pin.config.instselector.txt";
 
 
 bool _isLoadInst(INS ins) {
@@ -26,14 +32,14 @@ bool _isCmpInst(INS ins) {
 bool _isCmpIncluded() {
   return includeinst.find(CMP) != includeinst.end() ||
          (includeinst.find(ALL) != includeinst.end() &&
-          excludeinst.find(CMP) != excludeinst.end())
+          excludeinst.find(CMP) == excludeinst.end());
 }
 
 void configInstSelector() {
   std::ifstream ifs;
-  ifs.open(configfile, std::ifstream::in);
+  ifs.open(configfile.c_str(), std::ifstream::in);
 
-  if (!ifs.bad()) {
+  if (!ifs.fail()) {
     unsigned line_num = 0;
 
     while (!ifs.eof()) {
@@ -44,19 +50,18 @@ void configInstSelector() {
         continue;
 
       string line_str(line);
-      string inst_arr[100];
-      UINT32 ret = Tokenize(line_str, line_arr, 100);
-      cerr << "ret of Tokenize " << ret << endl;
+      string line_arr[100];
+      UINT32 num = Tokenize(line_str, line_arr, 100);
 
       // first line include
       if (line_num == 0) {
-        for (int i = 0; i < 100; i++) {
+        for (UINT32 i = 0; i < num; i++) {
           if (line_arr[i] != "") {
             includeinst.insert(line_arr[i]);
           }
         }
       } else if (line_num == 1) {
-        for (int i = 0; i < 100; i++) {
+        for (UINT32 i = 0; i < num; i++) {
           if (line_arr[i] != "") {
             excludeinst.insert(line_arr[i]);
           }
@@ -99,7 +104,7 @@ bool isInstFITarget(INS ins) {
               _isStoreInst(ins)) {
       ret = true; 
     } else if (includeinst.find(CATEGORY_StringShort(INS_Category(ins))) != includeinst.end() ||
-              includeinst.find(INS_Mnemonic(ins) != includeinst.end())) {
+              includeinst.find(INS_Mnemonic(ins)) != includeinst.end()) {
       ret = true;  
     }
   }
@@ -127,6 +132,8 @@ bool isInstFITarget(INS ins) {
 // debug
   if (ret) {
     std::cerr << "instruction to be included " << INS_Disassemble(ins) << endl;
+  } else {
+    //std::cerr << "instruction to be excluded " << INS_Disassemble(ins) << endl;
   }
 
   return ret;
