@@ -25,42 +25,47 @@ VOID FI_InjectFault_FlagReg(VOID * ip, UINT32 reg_num, UINT32 jmp_num, CONTEXT* 
 {
 	if(fi_iterator == fi_inject_instance) {
 
+    bool isvalid = false;
+
     const REG reg =  reg_map.findInjectReg(reg_num);
 		if(REG_valid(reg)){
+
+      isvalid = true;
+
 			CJmpMap::JmpType jmptype = jmp_map.findJmpType(jmp_num);
 		PRINT_MESSAGE(3, ("EXECUTING flag reg: Original Reg name %s value %p\n", REG_StringShort(reg).c_str(), 
 					(VOID*)PIN_GetContextReg( ctxt, reg )));
 			if(jmptype == CJmpMap::DEFAULT) {
-				UINT32 temp = PIN_GetContextReg( ctxt, reg );
+				ADDRINT temp = PIN_GetContextReg( ctxt, reg );
 				UINT32 inject_bit = jmp_map.findInjectBit(jmp_num);
-				temp = temp ^ (1U << inject_bit);
+				temp = temp ^ (1UL << inject_bit);
 
 				PIN_SetContextReg( ctxt, reg, temp);
 	    } else if (jmptype == CJmpMap::USPECJMP) {
-				UINT32 temp = PIN_GetContextReg( ctxt, reg );
-				UINT32 CF_val = (temp & (1U << CF_BIT)) >> CF_BIT;
-				UINT32 ZF_val = (temp & (1U << ZF_BIT)) >> ZF_BIT;
+				ADDRINT temp = PIN_GetContextReg( ctxt, reg );
+				UINT32 CF_val = (temp & (1UL << CF_BIT)) >> CF_BIT;
+				UINT32 ZF_val = (temp & (1UL << ZF_BIT)) >> ZF_BIT;
 				if(CF_val || ZF_val) {
-					temp = temp & (~(1U << CF_BIT));
-					temp = temp & (~(1U << ZF_BIT));
+					temp = temp & (~(1UL << CF_BIT));
+					temp = temp & (~(1UL << ZF_BIT));
 				}
 				else {
-					temp = temp | (1U << ZF_BIT);
+					temp = temp | (1UL << ZF_BIT);
 				}
 				PIN_SetContextReg( ctxt, reg, temp);
 	    }	else {
-				UINT32 temp = PIN_GetContextReg( ctxt, reg );
-				UINT32 SF_val = (temp & (1U << SF_BIT)) >> SF_BIT;
-				UINT32 OF_val = (temp & (1U << OF_BIT)) >> OF_BIT;
-				UINT32 ZF_val = (temp & (1U << ZF_BIT)) >> ZF_BIT;
+				ADDRINT temp = PIN_GetContextReg( ctxt, reg );
+				UINT32 SF_val = (temp & (1UL << SF_BIT)) >> SF_BIT;
+				UINT32 OF_val = (temp & (1UL << OF_BIT)) >> OF_BIT;
+				UINT32 ZF_val = (temp & (1UL << ZF_BIT)) >> ZF_BIT;
 				if(ZF_val || (SF_val != OF_val)) {
-					temp = temp & (~(1U << ZF_BIT));
+					temp = temp & (~(1UL << ZF_BIT));
 					if(SF_val != OF_val) {
-						temp = temp ^ (1U << SF_BIT);
+						temp = temp ^ (1UL << SF_BIT);
 					}
 				}
 				else {
-					temp = temp | (1U << ZF_BIT);
+					temp = temp | (1UL << ZF_BIT);
 				}
 				PIN_SetContextReg( ctxt, reg, temp);
 			}
@@ -68,13 +73,25 @@ VOID FI_InjectFault_FlagReg(VOID * ip, UINT32 reg_num, UINT32 jmp_num, CONTEXT* 
 					(VOID*)PIN_GetContextReg( ctxt, reg )));
 			
 			//FI_PrintActivationInfo();	
+			//fi_iterator ++;
+		}
+		if(isvalid){
+			fprintf(activationFile, "Activated: Valid Reg name %s\n", REG_StringShort(reg).c_str());
+			fclose(activationFile); // can crash after this!
+			activated = 1;
 			fi_iterator ++;
-		} else
+	
+			PIN_ExecuteAt(ctxt);
+				//PIN_ExecuteAt() will lead to reexecution of the function right after injection
+		}
+
+
+
+ else
       fi_inject_instance++;
 
 		//fi_iterator ++;
 
-		PIN_ExecuteAt(ctxt);
 	} 
 	fi_iterator ++;
 }
@@ -92,14 +109,14 @@ VOID inject_SP_FP(VOID *ip, UINT32 reg_num, CONTEXT *ctxt){
 		PRINT_MESSAGE(4, ("EXECUTING: Reg name %s value %p\n", REG_StringShort(reg).c_str(), 
 			(VOID*)PIN_GetContextReg( ctxt, reg )));
 
-		UINT32 temp = PIN_GetContextReg( ctxt, reg );
+		ADDRINT temp = PIN_GetContextReg( ctxt, reg );
 		srand((unsigned)time(0)); 
 		UINT32 low_bound_bit = reg_map.findLowBoundBit(reg_num);
 		UINT32 high_bound_bit = reg_map.findHighBoundBit(reg_num);
 
 		UINT32 inject_bit = (rand() % (high_bound_bit - low_bound_bit)) + low_bound_bit;
 
-		temp = temp ^ (1 << inject_bit);
+		temp = (ADDRINT) (temp ^ (1UL << inject_bit));
 
 		PIN_SetContextReg( ctxt, reg, temp);
 		PRINT_MESSAGE(4, ("EXECUTING: Changed Reg name %s value %p\n", REG_StringShort(reg).c_str(), 
@@ -152,14 +169,14 @@ VOID inject_CCS(VOID *ip, UINT32 reg_num, CONTEXT *ctxt){
 				//PRINT_MESSAGE(4, ("EXECUTING: Reg name %s value %p\n", REG_StringShort(reg).c_str(), 
 				//	(VOID*)PIN_GetContextReg( ctxt, reg )));
 
-				UINT32 temp = PIN_GetContextReg( ctxt, reg );
+				ADDRINT temp = PIN_GetContextReg( ctxt, reg );
 				srand((unsigned)time(0)); 
 				UINT32 low_bound_bit = reg_map.findLowBoundBit(reg_num);
 				UINT32 high_bound_bit = reg_map.findHighBoundBit(reg_num);
 
 				UINT32 inject_bit = (rand() % (high_bound_bit - low_bound_bit)) + low_bound_bit;
 
-				temp = temp ^ (1 << inject_bit);
+				temp = (ADDRINT)(temp ^ (1UL << inject_bit));
 
 				PIN_SetContextReg( ctxt, reg, temp);
 

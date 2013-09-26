@@ -17,7 +17,9 @@ static string configfile = "pin.config.instselector.txt";
 
 
 bool _isLoadInst(INS ins) {
-  return INS_IsMemoryRead(ins);  
+  string opcode = INS_Mnemonic(ins);
+  //cerr << opcode << endl;
+  return INS_IsMemoryRead(ins) and opcode.find("MOV") != string::npos;
 }
 
 bool _isStoreInst(INS ins) {
@@ -131,7 +133,8 @@ bool isInstFITarget(INS ins) {
 
 // debug
   if (ret) {
-    std::cerr << "instruction to be included " << INS_Disassemble(ins) << endl;
+    //std::cerr << "instruction to be included " << INS_Disassemble(ins) << endl;
+    LOG("INSTSELECTOR: instruction to be included " + INS_Disassemble(ins));
   } else {
     //std::cerr << "instruction to be excluded " << INS_Disassemble(ins) << endl;
   }
