@@ -99,6 +99,7 @@ VOID FI_InjectFault_FlagReg(VOID * ip, UINT32 reg_num, UINT32 jmp_num, CONTEXT* 
 
 
 //analysis code -- injection code
+/*
 VOID inject_SP_FP(VOID *ip, UINT32 reg_num, CONTEXT *ctxt){
 	if(fi_iterator == fi_inject_instance) {
 		const REG reg =  reg_map.findInjectReg(reg_num);
@@ -129,7 +130,7 @@ VOID inject_SP_FP(VOID *ip, UINT32 reg_num, CONTEXT *ctxt){
 	//PIN_ExecuteAt() will lead to reexecution of the function right after injection
 	fi_iterator ++;
 }
-
+*/
 
 
 VOID inject_CCS(VOID *ip, UINT32 reg_num, CONTEXT *ctxt){
@@ -201,6 +202,42 @@ VOID inject_CCS(VOID *ip, UINT32 reg_num, CONTEXT *ctxt){
 	}
 	fi_iterator ++;
 }
+
+VOID FI_InjectFault_Mem(VOID * ip, VOID *memp, UINT32 size)
+{
+		if(fi_iterator == fi_inject_instance) {
+			if(size == 4) {
+				PRINT_MESSAGE(4, ("Executing %p, memory %p, value %d, in hex %p\n", 
+					ip, memp, * ((int*)memp), (VOID*)(*((int*)memp))));
+			}
+
+			UINT8* temp_p = (UINT8*) memp;
+			srand((unsigned)time(0)); 	
+			UINT32 inject_bit = rand() % (size * 8/* bits in one byte*/);
+		
+			UINT32 byte_num = inject_bit / 8;
+			UINT32 offset_num = inject_bit % 8;
+		
+			*(temp_p + byte_num) = *(temp_p + byte_num) ^ (1U << offset_num);
+		
+			if(size == 4) {
+				PRINT_MESSAGE(4, ("Executing %p, memory %p, value %d, in hex %p\n", 
+					ip, memp, * ((int*)memp), (VOID*)(*((int*)memp))));
+			}
+			
+
+      fprintf(activationFile, "Activated: Memory injection\n");
+			fclose(activationFile); // can crash after this!
+			activated = 1;
+
+
+			fi_iterator ++; //This is because the inject_reg will mistakenly add 1 more time when injecting 
+		}
+
+		fi_iterator ++;
+}
+
+
 
 VOID instruction_Instrumentation(INS ins, VOID *v){
 	// decides where to insert the injection calls and what calls to inject
@@ -312,8 +349,11 @@ VOID instruction_Instrumentation(INS ins, VOID *v){
             reg = INS_RegW(ins, randW);
         else
             reg = INS_RegW(ins, 0);
-        if(!REG_valid(reg))
+        if(!REG_valid(reg)) {
+
+            LOG("REGNOTVALID: inst " + INS_Disassemble(ins) + "\n");
             return;
+      }
         index = reg_map.findRegIndex(reg);
         LOG("ins:" + INS_Disassemble(ins) + "\n"); 
 		LOG("reg:" + REG_StringShort(reg) + "\n");
@@ -332,7 +372,20 @@ VOID instruction_Instrumentation(INS ins, VOID *v){
 						IARG_CONTEXT,
 						IARG_END);
 			return;
-		}
+		} else if (INS_IsMemoryWrite(ins)) {
+        LOG("COMP2MEM: inst " + INS_Disassemble(ins) + "\n");
+				
+        INS_InsertPredicatedCall(
+								ins, IPOINT_BEFORE, (AFUNPTR)FI_InjectFault_Mem,
+								IARG_ADDRINT, INS_Address(ins),
+								IARG_MEMORYREAD_EA,							
+								IARG_MEMORYREAD_SIZE,
+								IARG_END);
+        return;
+    
+    } else {
+      LOG("NORMAL FLAG REG: inst " + INS_Disassemble(ins) + "\n");
+    }
 
 	}
 

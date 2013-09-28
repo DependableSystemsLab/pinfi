@@ -134,7 +134,7 @@ bool isInstFITarget(INS ins) {
 // debug
   if (ret) {
     //std::cerr << "instruction to be included " << INS_Disassemble(ins) << endl;
-    LOG("INSTSELECTOR: instruction to be included " + INS_Disassemble(ins));
+    LOG("INSTSELECTOR: instruction to be included " + INS_Disassemble(ins) + "\n");
   } else {
     //std::cerr << "instruction to be excluded " << INS_Disassemble(ins) << endl;
   }
