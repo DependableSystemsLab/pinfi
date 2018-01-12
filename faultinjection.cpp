@@ -156,7 +156,8 @@ VOID inject_CCS(VOID *ip, UINT32 reg_num, CONTEXT *ctxt){
 
 					FI_SetYMMContextReg(ctxt, reg, reg_num);
 				}
-				else if(REG_is_fr_or_x87(reg) || REG_is_mm(reg)) {
+				//else if(REG_is_fr_or_x87(reg) || REG_is_mm(reg)) {
+				else if(REG_is_fr(reg) || REG_is_mm(reg)) {
 					PRINT_MESSAGE(4, ("Executing: mm or x87: Reg name %s\n", REG_StringShort(reg).c_str()));
 
 					FI_SetSTContextReg(ctxt, reg, reg_num);

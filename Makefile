@@ -1,7 +1,8 @@
 ##
 ## PIN tools
 ##
-PIN_HOME ?= /ubc/ece/home/kp/grads/jwei/pin
+#PIN_HOME ?= /ubc/ece/home/kp/grads/jwei/pin
+PIN_HOME = /home/bo/pin-3.5-97503-gac534ca30-gcc-linux
 OBJDIR = testobj
 ##############################################################
 #
