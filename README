@@ -2,8 +2,9 @@ HOW TO USE PINFI:
 
 1. Installation
 - Make sure pin is installed.
-- Copy the top-level directory (everything except the example/ subdirectory) to <pin root>/source/tools/
-- In the command line, type 'make' under the root folder of the pinfi project to compile the pinfi.
+- Create a directory under  <pin root>/source/tools, such as <pin root>/source/tools/pinfi
+- Copy the top-level directory (everything except the example/ subdirectory) to <pin root>/source/tools/pinfi
+- In the command line, type 'make' under <pin root>/source/tools/pinfi to compile the pinfi.
 - After compiling pinfi, a folder called obj-intel64 will be created under the project folder.
 
 2. Usage
