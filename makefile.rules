@@ -17,14 +17,14 @@
 # This defines tests which run tools of the same name.  This is simply for convenience to avoid
 # defining the test name twice (once in TOOL_ROOTS and again in TEST_ROOTS).
 # Tests defined here should not be defined in TOOL_ROOTS and TEST_ROOTS.
-TEST_TOOL_ROOTS := instcount instcategory faultinjection 
+TEST_TOOL_ROOTS := 
 
 # This defines the tests to be run that were not already defined in TEST_TOOL_ROOTS.
 TEST_ROOTS :=
 
 # This defines the tools which will be run during the the tests, and were not already defined in
 # TEST_TOOL_ROOTS.
-TOOL_ROOTS :=
+TOOL_ROOTS := instcount instcategory faultinjection
 
 # This defines the static analysis tools which will be run during the the tests. They should not
 # be defined in TEST_TOOL_ROOTS. If a test with the same name exists, it should be defined in
@@ -38,10 +38,10 @@ SA_TOOL_ROOTS :=
 APP_ROOTS :=
 
 # This defines any additional object files that need to be compiled.
-OBJECT_ROOTS := utils instselector instcount instcategory faultinjection
+OBJECT_ROOTS := utils instcount instcategory instselector faultinjection 
 
 # This defines any additional dlls (shared objects), other than the pintools, that need to be compiled.
-DLL_ROOTS :=
+DLL_ROOTS := 
 
 # This defines any static libraries (archives), that need to be built.
 LIB_ROOTS :=
@@ -96,7 +96,17 @@ SANITY_SUBSET := $(TEST_TOOL_ROOTS) $(TEST_ROOTS)
 
 # This section contains the build rules for all binaries that have special build rules.
 # See makefile.default.rules for the default build rules.
+#TOOLS = $(TOOL_ROOTS:%=$(OBJDIR)%$(PINTOOL_SUFFIX))
+#$(TOOLS): %$(PINTOOL_SUFFIX) : %.o $(OBJDIR)instselector.o $(OBJDIR)utils.o
+#	$(PIN_LD) $(PIN_LDFLAGS) ${LINK_OUT}$@ $< $(OBJDIR)instselector.o $(OBJDIR)utils.o $(PIN_LIBS) $(DBG)
 
 ###### Special tools' build rules ######
-#$(OBJDIR)utils.o: utils.cpp
-#	$(CXX) -c -o $(CXXFLAGS) $(PIN_CXXFLAGS) $(OUTOPT) $@ $<
+$(OBJDIR)faultinjection$(PINTOOL_SUFFIX): $(OBJDIR)faultinjection.o  $(OBJDIR)instselector.o $(OBJDIR)utils.o
+	$(CXX) -shared -Wl,--hash-style=sysv ../../../intel64/runtime/pincrt/crtbeginS.o -Wl,-Bsymbolic -Wl,--version-script=../../../source/include/pin/pintool.ver -fabi-version=2  -o ${LINK_OUT}$@ $< $(OBJDIR)instselector.o $(OBJDIR)utils.o -L../../../intel64/runtime/pincrt -L../../../intel64/lib -L../../../intel64/lib-ext -L../../../extras/xed-intel64/lib -lpin -lxed ../../../intel64/runtime/pincrt/crtendS.o -lpin3dwarf  -ldl-dynamic -nostdlib -lstlport-dynamic -lm-dynamic -lc-dynamic -lunwind-dynamic
+
+$(OBJDIR)instcount$(PINTOOL_SUFFIX): $(OBJDIR)instcount.o  $(OBJDIR)instselector.o $(OBJDIR)utils.o
+	$(CXX) -shared -Wl,--hash-style=sysv ../../../intel64/runtime/pincrt/crtbeginS.o -Wl,-Bsymbolic -Wl,--version-script=../../../source/include/pin/pintool.ver -fabi-version=2  -o ${LINK_OUT}$@ $< $(OBJDIR)instselector.o $(OBJDIR)utils.o -L../../../intel64/runtime/pincrt -L../../../intel64/lib -L../../../intel64/lib-ext -L../../../extras/xed-intel64/lib -lpin -lxed ../../../intel64/runtime/pincrt/crtendS.o -lpin3dwarf  -ldl-dynamic -nostdlib -lstlport-dynamic -lm-dynamic -lc-dynamic -lunwind-dynamic
+
+$(OBJDIR)instcategory$(PINTOOL_SUFFIX): $(OBJDIR)instcategory.o  $(OBJDIR)instselector.o $(OBJDIR)utils.o
+	$(CXX) -shared -Wl,--hash-style=sysv ../../../intel64/runtime/pincrt/crtbeginS.o -Wl,-Bsymbolic -Wl,--version-script=../../../source/include/pin/pintool.ver -fabi-version=2  -o ${LINK_OUT}$@ $< $(OBJDIR)instselector.o $(OBJDIR)utils.o -L../../../intel64/runtime/pincrt -L../../../intel64/lib -L../../../intel64/lib-ext -L../../../extras/xed-intel64/lib -lpin -lxed ../../../intel64/runtime/pincrt/crtendS.o -lpin3dwarf  -ldl-dynamic -nostdlib -lstlport-dynamic -lm-dynamic -lc-dynamic -lunwind-dynamic
+
