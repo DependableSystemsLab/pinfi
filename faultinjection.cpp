@@ -76,7 +76,7 @@ VOID FI_InjectFault_FlagReg(VOID * ip, UINT32 reg_num, UINT32 jmp_num, CONTEXT* 
 			//fi_iterator ++;
 		}
 		if(isvalid){
-			fprintf(activationFile, "Activated: Valid Reg name %s\n", REG_StringShort(reg).c_str());
+			fprintf(activationFile, "Activated: Valid Reg name %s in %p\n", REG_StringShort(reg).c_str(), ip);
 			fclose(activationFile); // can crash after this!
 			activated = 1;
 			fi_iterator ++;
@@ -190,7 +190,7 @@ VOID inject_CCS(VOID *ip, UINT32 reg_num, CONTEXT *ctxt){
                         //FI_PrintActivationInfo();	
 		}
 		if(isvalid){
-			fprintf(activationFile, "Activated: Valid Reg name %s\n", REG_StringShort(reg).c_str());
+			fprintf(activationFile, "Activated: Valid Reg name %s in %p\n", REG_StringShort(reg).c_str(), ip);
 			fclose(activationFile); // can crash after this!
 			activated = 1;
 			fi_iterator ++;
