@@ -249,7 +249,7 @@ VOID FI_InjectFault_MEM_ECC(VOID * ip, VOID *memp, UINT32 size,UINT32 num, BOOL 
 		UINT8* temp_p = (UINT8*) memp;
 		srand((unsigned)time(0));
 		UINT32 last_inject_bit = 0;
-		for (int i = 0; i < num; i ++) {
+		for (UINT32 i = 0; i < num; i ++) {
 			UINT32 inject_bit = rand() % (size * 8/* bits in one byte*/);
 
 			if ((i == num-1) && mode)
