@@ -238,6 +238,78 @@ VOID FI_InjectFault_Mem(VOID * ip, VOID *memp, UINT32 size)
 		fi_iterator ++;
 }
 
+VOID FI_InjectFault_MEM_ECC(VOID * ip, VOID *memp, UINT32 size,UINT32 num, BOOL mode)
+{
+	if(fi_iterator == fi_inject_instance) {
+
+		PRINT_MESSAGE(4, ("Executing %p, memory %p, value %d, in hex %p\n",
+					ip, memp, * ((int*)memp), (VOID*)(*((int*)memp))));
+
+
+		UINT8* temp_p = (UINT8*) memp;
+		srand((unsigned)time(0));
+		UINT32 last_inject_bit = 0;
+		for (int i = 0; i < num; i ++) {
+			UINT32 inject_bit = rand() % (size * 8/* bits in one byte*/);
+
+			if ((i == num-1) && mode)
+			{
+				inject_bit = last_inject_bit+1;
+				if (inject_bit == size*8)
+					inject_bit = 0; // just do this for now. This case should be rare.
+			}
+			UINT32 byte_num = inject_bit / 8;
+			UINT32 offset_num = inject_bit % 8;
+
+			*(temp_p + byte_num) = *(temp_p + byte_num) ^ (1U << offset_num);
+
+
+			PRINT_MESSAGE(4, ("Executing %p, memory %p, value %d, in hex %p\n",
+					ip, memp, *((int *) memp), (VOID * )(*((int *) memp))));
+			last_inject_bit = inject_bit;
+		}
+		fprintf(activationFile, "Activated: Memory injection\n");
+		fclose(activationFile); // can crash after this!
+		activated = 1;
+
+
+		fi_iterator ++; //This is because the inject_reg will mistakenly add 1 more time when injecting
+	}
+
+	fi_iterator ++;
+}
+
+
+VOID instruction_InstrumentationECC(INS ins, VOID *v)
+{
+	int num = multibits.Value();
+	bool mode = consecutive.Value();
+	if (!isValidInst(ins))
+		return;
+	// memory write, so the injection happens after
+	if (INS_IsMemoryWrite(ins)){
+		INS_InsertPredicatedCall(
+				ins, IPOINT_AFTER, (AFUNPTR)FI_InjectFault_MEM_ECC,
+				IARG_ADDRINT, INS_Address(ins),
+				IARG_MEMORYREAD_EA,
+				IARG_MEMORYREAD_SIZE,
+				IARG_UINT32,num,
+				IARG_UINT32,mode,
+				IARG_END);
+	}
+
+	if (INS_IsMemoryRead(ins)){
+		INS_InsertPredicatedCall(
+				ins, IPOINT_BEFORE, (AFUNPTR)FI_InjectFault_MEM_ECC,
+				IARG_ADDRINT, INS_Address(ins),
+				IARG_MEMORYREAD_EA,
+				IARG_MEMORYREAD_SIZE,
+				IARG_UINT32,num,
+				IARG_BOOL,mode,
+				IARG_END);
+	}
+
+}
 
 
 VOID instruction_Instrumentation(INS ins, VOID *v){
@@ -490,7 +562,11 @@ int main(int argc, char *argv[])
 
 	get_instance_number(instcount_file.Value().c_str());
 
+	if (!fiecc.Value())
 	INS_AddInstrumentFunction(instruction_Instrumentation, 0);
+
+	else
+		INS_AddInstrumentFunction(instruction_InstrumentationECC, 0);
 
 	PIN_AddFiniFunction(Fini, 0);
 

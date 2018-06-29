@@ -19,7 +19,7 @@ static string configfile = "pin.config.instselector.txt";
 bool _isLoadInst(INS ins) {
   string opcode = INS_Mnemonic(ins);
   //cerr << opcode << endl;
-  return INS_IsMemoryRead(ins) and opcode.find("MOV") != string::npos;
+  return INS_IsMemoryRead(ins) /*and opcode.find("MOV") != string::npos*/;
 }
 
 bool _isStoreInst(INS ins) {

@@ -14,6 +14,10 @@ KNOB<string> fioption(KNOB_MODE_WRITEONCE, "pintool", "fioption", "", "specify f
 
 KNOB<string> fi_activation_file (KNOB_MODE_WRITEONCE, "pintool",
     "fi_activation", "activate", "specify fault injection activation file");
+
+KNOB<BOOL> fiecc(KNOB_MODE_WRITEONCE, "pintool", "e", "0", "enbale ecc error injection");
+KNOB<UINT32> multibits(KNOB_MODE_WRITEONCE,"pintool","m","2","how many bits to inject");
+KNOB<BOOL> consecutive(KNOB_MODE_WRITEONCE,"pintool","c","0","if the injected bits are consecutive");
 //typedef uint64_t UINT64;
 //typedef uint32_t UINT32;
 
