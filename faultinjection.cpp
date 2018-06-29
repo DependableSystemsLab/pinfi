@@ -287,7 +287,7 @@ VOID instruction_InstrumentationECC(INS ins, VOID *v)
 	if (!isValidInst(ins))
 		return;
 	// memory write, so the injection happens after
-	if (INS_IsMemoryWrite(ins)){
+	/*if (INS_IsMemoryWrite(ins)){
 		INS_InsertPredicatedCall(
 				ins, IPOINT_AFTER, (AFUNPTR)FI_InjectFault_MEM_ECC,
 				IARG_ADDRINT, INS_Address(ins),
@@ -296,7 +296,7 @@ VOID instruction_InstrumentationECC(INS ins, VOID *v)
 				IARG_UINT32,num,
 				IARG_UINT32,mode,
 				IARG_END);
-	}
+	}*/
 
 	if (INS_IsMemoryRead(ins)){
 		INS_InsertPredicatedCall(
