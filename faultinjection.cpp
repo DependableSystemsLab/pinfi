@@ -242,8 +242,8 @@ VOID FI_InjectFault_MEM_ECC(VOID * ip, VOID *memp, UINT32 size,UINT32 num, BOOL 
 {
 	if(fi_iterator == fi_inject_instance) {
 
-		fprintf(activationFile, "Executing %p, memory %p, value %d, in hex %x, size %d\n",
-					ip, memp, * ((long int*)memp), (*((long int*)memp)),size);
+		fprintf(activationFile, "Executing %p, memory %p, value %lld, in hex %llx, size %d\n",
+					ip, memp, * ((long long*)memp), (*((long long*)memp)),size);
 
 
 		UINT8* temp_p = (UINT8*) memp;
@@ -264,8 +264,8 @@ VOID FI_InjectFault_MEM_ECC(VOID * ip, VOID *memp, UINT32 size,UINT32 num, BOOL 
 			*(temp_p + byte_num) = *(temp_p + byte_num) ^ (1U << offset_num);
 
 
-			fprintf(activationFile, "Executing %p, memory %p, value %lld, in hex %x, injected_bit %d\n",
-					ip, memp, * ((long int*)memp), (*((long int*)memp)),inject_bit);
+			fprintf(activationFile, "Executing %p, memory %p, value %lld, in hex %llx, injected_bit %d\n",
+					ip, memp, * ((long long*)memp), (*((long long*)memp)),inject_bit);
 			last_inject_bit = inject_bit;
 		}
 		fprintf(activationFile, "Activated: Memory injection\n");
